@@ -37,8 +37,11 @@ module Bravo
   autoload :Authorizer,   'bravo/authorizer'
   autoload :AuthData,     'bravo/auth_data'
   autoload :Bill,         'bravo/bill'
+  autoload :BillItemized, 'bravo/bill_itemized'
   autoload :Constants,    'bravo/constants'
   autoload :Wsaa,         'bravo/wsaa'
+  autoload :WSFE,         'bravo/wsfe'
+  autoload :WSMTXCA,      'bravo/wsmtxca'
   autoload :Reference,    'bravo/reference'
 
   extend self

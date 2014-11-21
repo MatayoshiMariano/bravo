@@ -9,7 +9,7 @@ Bravo.sale_point        = '0002'
 Bravo.default_concepto  = 'Productos y Servicios'
 Bravo.default_moneda    = :peso
 Bravo.own_iva_cond      = :responsable_inscripto
-Bravo.openssl_bin       = '/usr/local/Cellar/openssl/1.0.1e/bin/openssl'
+Bravo.openssl_bin       = '/usr/bin/openssl'
 Bravo::AuthData.environment         = :test
 
 # Let's issue a Factura for 1200 ARS to a Responsable Inscripto

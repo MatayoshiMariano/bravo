@@ -7,7 +7,8 @@ module Bravo
     # Main method for authentication and authorization.
     # When successful, produces the yaml file with auth data.
     #
-    def self.login
+    def self.login(service_type)
+      @service_type = service_type
       tra   = build_tra
       cms   = build_cms(tra)
       req   = build_request(cms)
@@ -33,7 +34,7 @@ module Bravo
     <generationTime>#{ @from }</generationTime>
     <expirationTime>#{ @to }</expirationTime>
   </header>
-  <service>wsfe</service>
+  <service>#{ @service_type }</service>
 </loginTicketRequest>
 EOF
       tra
@@ -87,10 +88,10 @@ XML
     #
     def self.write_yaml(certs)
       yml = <<-YML
-token: #{certs[0]}
-sign: #{certs[1]}
+token_#{ @service_type }: #{certs[0]}
+sign_#{ @service_type }: #{certs[1]}
 YML
-      `echo '#{ yml }' > /tmp/bravo_#{ Bravo.cuit }_#{ Time.new.strftime('%Y_%m_%d') }.yml`
+      `echo '#{ yml }' > /tmp/bravo_#{ Bravo.cuit }_#{ @service_type }_#{ Time.new.strftime('%Y_%m_%d') }.yml`
     end
 
   end

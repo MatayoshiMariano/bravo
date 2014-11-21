@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Leandro Marcucci"]
   gem.email         = ["leanucci@gmail.com"]
   gem.description   = 'Adaptador para el Web Service de Facturacion Electrónica de AFIP'
-  gem.summary       = 'Adaptador WSFE'
+  gem.summary       = 'Adaptador WSMTXCA'
   gem.homepage      = "https://github.com/leanucci/bravo#readme"
   gem.date          = '2011-03-14'
 

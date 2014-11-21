@@ -105,9 +105,11 @@ module Bravo
   #
   URLS = {
     test: { wsaa: 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms',
-            wsfe: 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL' },
+            wsfe: 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL',
+            mtx: 'https://fwshomo.afip.gov.ar/wsmtxca/services/MTXCAService?wsdl' },
 
     production: { wsaa: 'https://wsaa.afip.gov.ar/ws/services/LoginCms',
-                  wsfe: 'https://servicios1.afip.gov.ar/wsfev1/service.asmx' }
+                  wsfe: 'https://servicios1.afip.gov.ar/wsfev1/service.asmx',
+                  mtx: 'https://serviciosjava.afip.gob.ar/wsmtxca/services/MTXCAService?wsdl' }
   }
 end

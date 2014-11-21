@@ -1,21 +1,22 @@
+require 'pry'
 # encoding: utf-8
 module Bravo
   # The main class in Bravo. Handles WSFE method interactions.
   # Subsequent implementations will be added here (maybe).
   #
-  class Bill
+  class BillItemized
     # Returns the Savon::Client instance in charge of the interactions with WSFE API.
     # (built on init)
     #
     attr_reader :client
 
     attr_accessor :net, :document_number, :iva_condition, :document_type, :concept, :currency, :due_date,
-      :aliciva_id, :date_from, :date_to, :body, :response, :invoice_type
+    :aliciva_id, :date_from, :date_to, :body, :response, :invoice_type
 
     def initialize(attrs = {})
-      opts = { wsdl: Bravo::AuthData.wsfe_url }.merge! Bravo.logger_options
+      opts = { wsdl: Bravo::AuthData.mtx_url }.merge! Bravo.logger_options
       @client       ||= Savon.client(opts)
-      @body           = { 'Auth' => Bravo::AuthData.auth_hash('wsfe') }
+      @body           = { 'authRequest' => Bravo::AuthData.auth_hash('wsmtxca') }
       @iva_condition  = validate_iva_condition(attrs[:iva_condition])
       @net            = attrs[:net]           || 0
       @document_type  = attrs[:document_type] || Bravo.default_documento
@@ -56,11 +57,11 @@ module Bravo
     #
     def authorize
       setup_bill
-      response = client.call(:fecae_solicitar) do |soap|
+      response = client.call(:autorizar_comprobante) do |soap|
         # soap.namespaces['xmlns'] = 'http://ar.gov.afip.dif.FEV1/'
         soap.message body
       end
-
+      binding.pry
       setup_response(response.to_hash)
       self.authorized?
     end
@@ -70,21 +71,6 @@ module Bravo
     #
     def setup_bill
       fecaereq = setup_request_structure
-
-      detail = fecaereq['FeCAEReq']['FeDetReq']['FECAEDetRequest']
-
-      detail['DocNro']    = document_number
-      detail['ImpNeto']   = net.to_f
-      detail['ImpIVA']    = iva_sum
-      detail['ImpTotal']  = total
-      detail['CbteDesde'] = detail['CbteHasta'] = Bravo::Reference.fe_next_bill_number(bill_type)
-
-      unless concept == 0
-        detail.merge!('FchServDesde'  => date_from  || today,
-                      'FchServHasta'  => date_to    || today,
-                      'FchVtoPago'    => due_date   || today)
-      end
-
       body.merge!(fecaereq)
     end
 
@@ -124,19 +110,19 @@ module Bravo
       request_detail.merge!(request_detail.delete(:iva)['AlicIva'].underscore_keys.symbolize_keys)
 
       response_hash = { header_result: response_header.delete(:resultado),
-                        authorized_on: response_header.delete(:fch_proceso),
+        authorized_on: response_header.delete(:fch_proceso),
 
-                        detail_result: response_detail.delete(:resultado),
-                        cae_due_date:  response_detail.delete(:cae_fch_vto),
-                        cae:           response_detail.delete(:cae),
+        detail_result: response_detail.delete(:resultado),
+        cae_due_date:  response_detail.delete(:cae_fch_vto),
+        cae:           response_detail.delete(:cae),
 
-                        iva_id:        request_detail.delete(:id),
-                        iva_importe:   request_detail.delete(:importe),
-                        moneda:        request_detail.delete(:mon_id),
-                        cotizacion:    request_detail.delete(:mon_cotiz),
-                        iva_base_imp:  request_detail.delete(:base_imp),
-                        doc_num:       request_detail.delete(:doc_nro)
-                      }.merge!(request_header).merge!(request_detail)
+        iva_id:        request_detail.delete(:id),
+        iva_importe:   request_detail.delete(:importe),
+        moneda:        request_detail.delete(:mon_id),
+        cotizacion:    request_detail.delete(:mon_cotiz),
+        iva_base_imp:  request_detail.delete(:base_imp),
+        doc_num:       request_detail.delete(:doc_nro)
+      }.merge!(request_header).merge!(request_detail)
 
       keys, values = response_hash.to_a.transpose
 
@@ -163,7 +149,7 @@ module Bravo
         iva_cond
       else
         raise(NullOrInvalidAttribute.new,
-          "El valor de iva_condition debe estar incluído en #{ valid_conditions }")
+        "El valor de iva_condition debe estar incluído en #{ valid_conditions }")
       end
     end
 
@@ -172,25 +158,70 @@ module Bravo
         type
       else
         raise(NullOrInvalidAttribute.new, "invoice_type debe estar incluido en \
-            #{ Bravo::BILL_TYPE_A.keys }")
+        #{ Bravo::BILL_TYPE_A.keys }")
       end
     end
 
     def setup_request_structure
-      { 'FeCAEReq' =>
-        { 'FeCabReq' => Bravo::Bill.header(bill_type),
-          'FeDetReq' =>
-            { 'FECAEDetRequest' =>
-              { 'Concepto' => Bravo::CONCEPTOS[concept], 'DocTipo' => Bravo::DOCUMENTOS[document_type],
-                'CbteFch' => today, 'ImpTotConc'  => 0.00, 'MonId' => Bravo::MONEDAS[currency][:codigo],
-                'MonCotiz' => 1, 'ImpOpEx' => 0.00, 'ImpTrib' => 0.00,
-                'Iva' =>
-                  { 'AlicIva' => { 'Id' => applicable_iva_code, 'BaseImp' => net.round(2),
-                                   'Importe' => iva_sum } } } } } }
+      { 'comprobanteCAERequest' =>
+        {
+          'codigoTipoComprobante' => bill_type,
+          'numeroPuntoVenta' => Bravo.sale_point,
+          'numeroComprobante' => Bravo::Reference.mtx_next_bill_number(bill_type),
+          'fechaEmision' => today,
+          'codigoTipoDocumento' => Bravo::DOCUMENTOS[document_type],
+          'numeroDocumento' => document_number,
+          'importeGravado' => ,
+          'importeNoGravado' => ,
+          'importeExento' => ,
+          'importeSubtotal' => ,
+          'importeOtrosTributos' => ,
+          'importeTotal' => ,
+          'codigoMoneda' => Bravo::MONEDAS[currency][:codigo],
+          'cotizacionMoneda' => 1,
+          'observaciones' => 'Observaciones comerciales, libres',
+          'codigoConcepto' => Bravo::CONCEPTOS[concept],
+          'arrayOtrosTributos' =>
+          {
+            'otroTributo' =>
+            {
+              'codigo' => 99,
+              'descripcion' => 'Otro atributo',
+              'baseImponible' => 100.00,
+              'importe' => 1.00
+            }
+          },
+          'arrayItems' =>
+          {
+            'item' =>
+            {
+              'unidadesMtx' => '123456',
+              'codigoMtx' => '0123456789913',
+              'codigo' => 'P0001',
+              'descripcion' => 'Descr del prod P0001',
+              'cantidad' => 1.00,
+              'codigoUnidadMedida' => 7,
+              'precioUnitario' => 100.00,
+              'importeBonificacion' => 0.00,
+              'codigoCondicionIVA' => 5,
+              'importeIVA' => 21.00,
+              'importeItem' => 121.00
+            }
+          },
+          'arraySubtotalesIVA' =>
+          {
+            'subtotalIVA' => {
+              'codigo' => 5,
+              'importe' => 21.00
+            }
+          },
+        }
+      }
     end
 
     def today
       Time.new.strftime('%Y%m%d')
     end
+
   end
 end

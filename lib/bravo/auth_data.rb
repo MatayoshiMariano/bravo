@@ -12,13 +12,13 @@ module Bravo
       # It requires the private key file and the certificate to exist and
       # to be configured as Bravo.pkey and Bravo.cert
       #
-      def fetch
+      def fetch(service_type)
         raise "Archivo de llave privada no encontrado en #{ Bravo.pkey }" unless File.exist?(Bravo.pkey)
         raise "Archivo certificado no encontrado en #{ Bravo.cert }" unless File.exist?(Bravo.cert)
 
-        Bravo::Wsaa.login unless File.exist?(todays_data_file_name)
+        Bravo::Wsaa.login(service_type) unless File.exist?(todays_data_file_name(service_type))
 
-        YAML.load_file(todays_data_file_name).each do |k, v|
+        YAML.load_file(todays_data_file_name(service_type)).each do |k, v|
           Bravo.const_set(k.to_s.upcase, v) unless Bravo.const_defined?(k.to_s.upcase)
         end
       end
@@ -26,9 +26,16 @@ module Bravo
       # Returns the authorization hash, containing the Token, Signature and Cuit
       # @return [Hash]
       #
-      def auth_hash
-        fetch unless Bravo.constants.include?(:TOKEN) && Bravo.constants.include?(:SIGN)
-        { 'Token' => Bravo::TOKEN, 'Sign' => Bravo::SIGN, 'Cuit' => Bravo.cuit }
+      def auth_hash(service_type)
+        unless Bravo.constants.include?(:"TOKEN_#{service_type.upcase}") &&
+               Bravo.constants.include?(:"SIGN_#{service_type.upcase}")
+          fetch(service_type)
+        end
+
+        Bravo.const_get(service_type.upcase)
+             .complete_auth_hash(Bravo.const_get(:"TOKEN_#{service_type.upcase}"),
+                                 Bravo.const_get(:"SIGN_#{service_type.upcase}"),
+                                 Bravo.cuit)
       end
 
       # Returns the right wsaa url for the specific environment
@@ -47,11 +54,16 @@ module Bravo
         Bravo::URLS[environment][:wsfe]
       end
 
+      def mtx_url
+        check_environment!
+        Bravo::URLS[environment][:mtx]
+      end
+
       # Creates the data file name for a cuit number and the current day
       # @return [String]
       #
-      def todays_data_file_name
-        @todays_data_file ||= "/tmp/bravo_#{ Bravo.cuit }_#{ Time.new.strftime('%Y_%m_%d') }.yml"
+      def todays_data_file_name(service_type)
+        @todays_data_file ||= "/tmp/bravo_#{ Bravo.cuit }_#{ service_type }_#{ Time.new.strftime('%Y_%m_%d') }.yml"
       end
 
       def check_environment!

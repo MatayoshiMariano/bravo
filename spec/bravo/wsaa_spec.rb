@@ -14,7 +14,7 @@ describe 'Wsaa' do
     <generationTime>#{ @from }</generationTime>
     <expirationTime>#{ @to }</expirationTime>
   </header>
-  <service>wsfe</service>
+  <service>wsmtxca</service>
 </loginTicketRequest>
 EOF
   end
