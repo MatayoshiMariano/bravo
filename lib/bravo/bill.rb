@@ -60,7 +60,6 @@ module Bravo
         # soap.namespaces['xmlns'] = 'http://ar.gov.afip.dif.FEV1/'
         soap.message body
       end
-
       setup_response(response.to_hash)
       self.authorized?
     end
@@ -79,7 +78,7 @@ module Bravo
       detail['ImpTotal']  = total
       detail['CbteDesde'] = detail['CbteHasta'] = Bravo::Reference.next_bill_number(bill_type)
 
-      unless concept == 0
+      unless Bravo::CONCEPTOS[concept] == '01'
         detail.merge!('FchServDesde'  => date_from  || today,
                       'FchServHasta'  => date_to    || today,
                       'FchVtoPago'    => due_date   || today)
