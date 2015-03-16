@@ -14,14 +14,16 @@ module Bravo
 
     def initialize(attrs = {})
       opts = { wsdl: Bravo::AuthData.wsfe_url }.merge! Bravo.logger_options
-      @client       ||= Savon.client(opts)
-      @body           = { 'Auth' => Bravo::AuthData.auth_hash }
-      @iva_condition  = validate_iva_condition(attrs[:iva_condition])
-      @net            = attrs[:net]           || 0
-      @document_type  = attrs[:document_type] || Bravo.default_documento
-      @currency       = attrs[:currency]      || Bravo.default_moneda
-      @concept        = attrs[:concept]       || Bravo.default_concepto
-      @invoice_type   = validate_invoice_type(attrs[:invoice_type])
+      @client        ||= Savon.client(opts)
+      @body            = { 'Auth' => Bravo::AuthData.auth_hash }
+      @iva_condition   = validate_iva_condition(attrs[:iva_condition])
+      @net             = attrs[:net]           || 0
+      @document_type   = attrs[:document_type] || Bravo.default_documento
+      @currency        = attrs[:currency]      || Bravo.default_moneda
+      @concept         = attrs[:concept]       || Bravo.default_concepto
+      @document_number = attrs[:document_number]
+      @document_type   = attrs[:document_type]
+      @invoice_type    = validate_invoice_type(attrs[:invoice_type])
     end
 
     # Searches the corresponding invoice type according to the combination of
