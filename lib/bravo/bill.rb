@@ -17,7 +17,7 @@ module Bravo
       @client        ||= Savon.client(opts)
       @body            = { 'Auth' => Bravo::AuthData.auth_hash }
       @iva_condition   = validate_iva_condition(attrs[:iva_condition])
-      @net             = attrs[:net]           || 0
+      @net             = attrs[:net].to_f.round(2) || 0
       @document_type   = attrs[:document_type] || Bravo.default_documento
       @currency        = attrs[:currency]      || Bravo.default_moneda
       @concept         = attrs[:concept]       || Bravo.default_concepto
@@ -39,7 +39,7 @@ module Bravo
     # @return [Float] the sum of both fields, or 0 if the net is 0.
     #
     def total
-      @total = net.zero? ? 0 : net + iva_sum
+      @total = net.zero? ? 0.0 : net + iva_sum
     end
 
     # Calculates the corresponding iva sum.
