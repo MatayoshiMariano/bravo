@@ -77,7 +77,7 @@ module Bravo
       detail['DocNro']    = document_number
       detail['ImpNeto']   = net.to_f
       detail['ImpIVA']    = iva_sum
-      detail['ImpTotal']  = total
+      detail['ImpTotal']  = total.round(2)
       detail['CbteDesde'] = detail['CbteHasta'] = Bravo::Reference.next_bill_number(bill_type)
 
       unless Bravo::CONCEPTOS[concept] == '01'
