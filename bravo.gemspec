@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = %w[lib bin]
 
-  gem.add_runtime_dependency(%{savon}, ["~> 2.3.0"])
+  gem.add_runtime_dependency(%{savon}, ["~> 2.8.1"])
   gem.add_runtime_dependency(%{thor}, ["~> 0.17"])
 
   gem.add_development_dependency(%{rspec}, ["~> 2.14.0"])
